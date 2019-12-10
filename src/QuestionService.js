@@ -18,21 +18,43 @@ const userApiClient = axios.create({
   timeout: 3000,
 })
 
-function createQuestion(question) {
-  question.random_1=crypto.randomBytes(2).readUInt32BE(0, true);
-  question.random_2=crypto.randomBytes(2).readUInt32BE(0, true);
-  question.random_3=crypto.randomBytes(2).readUInt32BE(0, true);
-  return userApiClient.post('/addQuestion',question)
+async function createQuestion(question) {
+if(question.incorrect_answers.length > 3 && question.correct_answer!==""){
+   question.random_1= await crypto.randomBytes(2).readUInt32BE(0, true);
+   question.random_2= await crypto.randomBytes(2).readUInt32BE(0, true);
+   question.random_3= await crypto.randomBytes(2).readUInt32BE(0, true);
+   let a = await question.correct_answer
+   question.correct_answer = await question.incorrect_answers[a-1];
+   await question.incorrect_answers.splice(a-1,1)
+   console.log(question)
+   return userApiClient.post('/addQuestion',question)
   .then(function (response) {
     return response
   })
   .catch(function (error) {
+    return {status:404}
     console.log(error);
   });
+  }
+  else{
+    return {status:404}
+  }
+}
+
+function getSubjects(){
+
+return userApiClient.get('/getSubjects')
+  .then(response =>{
+      return {suc:response.data.success,res:response.data.res}
+  }).catch(error =>{
+    console.log(error)
+      return {suc:false,res:error}
+  })
 }
 
 
 
 export const questionService = {
   createQuestion,
+  getSubjects
 }

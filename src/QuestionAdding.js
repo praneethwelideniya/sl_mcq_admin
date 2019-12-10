@@ -2,97 +2,108 @@ import React, { Component } from 'react';
 import './App.css';
 import {Form,Button,Container,Row,Col } from 'react-bootstrap';
 import { questionService } from './QuestionService'
-import { fonts } from './Fonts'
-const crypto = require('crypto');
-
 export default class QuestionAdding extends Component {
 
   state ={
     question : "",
-    incorrect_answers:["","",""],
+    incorrect_answers:["","","",""],
     correct_answer:"",
-    subject_id:'1303',
-    font:"0",
+    subject_id:"",
     paper_type:"Model-Paper",
     q_num:"",
     medium:"sinhala",
-    other: '',
-    active:true
+    other: "",
+    active:true,
+    subjects:[],
+    images_exists:false
   }
   constructor(props) {
       super(props);
       this.handleSubmit = this.handleSubmit.bind(this);
-      this.convert = this.convert.bind(this)
-      this.fontChange = this.fontChange.bind(this)
+      this.getOptions = this.getOptions.bind(this);
   }
-  componentDidMount(){
-    //this.setState({incorrect_answers:['','','']})
+  async componentDidMount(){
+    await questionService.getSubjects().then(async (response)=>{
+      var sub = [];
+      await response.res.forEach(data =>{
+        sub.push({id:data.id,name:data.name})
+      })
+      await this.setState({subjects:sub})
+    }).catch(error=>{
+
+    })
   }
 
-  fontChange(value){
-    this.setState({font:value})
-  }
-  convert(text,value){
-
-    switch (value) {
-      case "2":
-        return fonts.Kaputa(text)
-        break;
-      case "3":
-        return fonts.Thibus(text)
-        break;
-      case "4":
-        return fonts.Manel(text)
-        break;
-      case "5":
-        return fonts.Amalee(text)
-        break;
-      case "1":
-        return fonts.Abhaya(text)
-        break;
-      default:
-        return text
-    }
-
-  }
   changeIncorrectAnswers(event,index){
-    var a = this.convert(event.target.value,this.state.font)
-    this.setState(state =>{
+    var a = event.target.value
+    this.setState( state =>{
       state.incorrect_answers[index] = a
       const incorrect_answers = state.incorrect_answers
       return {incorrect_answers}
     })
   }
-  handleSubmit(){
-    let json = this.state
-    delete json["font"]
-    questionService.createQuestion(json).then((response)=>{
+   setRequest= async () => {
+     return {
+       question : this.state.question,
+       incorrect_answers:this.state.incorrect_answers,
+       correct_answer:this.state.correct_answer,
+       subject_id:this.state.subject_id,
+       paper_type:this.state.paper_type,
+       q_num:this.state.q_num,
+       medium:this.state.medium,
+       other: this.state.other,
+       active:this.state.active,
+       images_exists:this.state.images_exists
+     }
+   }
+
+   handleSubmit = async () => {
+    let json = await this.setRequest()
+    await console.log(json)
+    if(await json.incorrect_answers.length > 3 ){
+      console.log(json.incorrect_answers.length)
+    await questionService.createQuestion(json).then(async (response)=>{
       console.log(response)
-      if(response != undefined && response.status==200){
+      if(response !== undefined && response.status===200){
         console.log("success")
-        this.setState({
+        await this.setState({
           question:"",
           correct_answer:"",
-          incorrect_answers:["","",""]
+          incorrect_answers:["","","",""]
         })
         if(Number(this.state.subject_id)>1200){
-          this.setState({
-            incorrect_answers:["","","",""]
+          await this.setState({
+            incorrect_answers:["","","","",""]
           })
         }
       }
+      else if(response !== undefined && response.status===404){
+        await this.setState({
+          subject_id:this.state.subject_id,
+          correct_answer:this.state.correct_answer,
+          incorrect_answers:this.state.incorrect_answers
+        })
+      }
     })
+    }
+    else{
+      await this.setState({
+        correct_answer:this.state.correct_answer,
+        incorrect_answers:this.state.incorrect_answers
+      })
+    }
   }
+
   ChangeSub(value){
     this.setState({subject_id:value})
-    if(this.state.incorrect_answers.length ==3 && Number(value)>1200){
+    if(this.state.incorrect_answers.length ===3 && Number(value)>1200){
       this.setState(state =>{
         state.incorrect_answers.push('')
         const incorrect_answers = state.incorrect_answers
         return {incorrect_answers}
       })
     }
-    if(this.state.incorrect_answers.length ==4 && Number(value)< 1200){
+    if(this.state.incorrect_answers.length ===4 && Number(value)< 1200){
       this.setState(state =>{
         state.incorrect_answers.splice(3, 1);
         const incorrect_answers = state.incorrect_answers
@@ -100,6 +111,25 @@ export default class QuestionAdding extends Component {
       })
     }
   }
+
+getOptions(){
+  let items = [];
+  if(this.state.subjects!==undefined){
+  this.state.subjects.forEach(sub=>{
+    items.push(<option key={sub.id} value={sub.id}>{Number(sub.id)>1300?"AL-"+sub.name:""+sub.name}</option>)
+  })
+  }
+  return items;
+}
+
+addQuestion(value){
+  let str = value.replace("  "," ")
+  str = str.replace(new RegExp(/\((.*?)\)/g),"///")
+  let arr = str.split("///")
+  this.setState({question:arr[0]})
+  arr.splice(0,1)
+  this.setState({incorrect_answers:arr})
+}
   render() {
     return (
       <div className="App">
@@ -107,30 +137,10 @@ export default class QuestionAdding extends Component {
           <Container>
           <Row>
           <Col>
-          <Form.Group controlId="fontsSelect" >
-           <Form.Label>Font</Form.Label>
-           <Form.Control as="select" onChange ={(event)=>{this.fontChange(event.target.value) }} value={this.state.font} >
-             <option value="0">Unidoce</option>
-             <option value="4">DL-Manel-bold. --> Unicode</option>
-             <option value ="2">kaputadotcom --> Unicode</option>
-             <option value ="1">FM Abhaya --> Unicode</option>
-             <option value = "3">Thibus Sinhala --> Unicode</option>
-             <option value = "5">Amalee --> Unicode</option>
-           </Form.Control>
-         </Form.Group>
-          </Col>
-          <Col>
           <Form.Group controlId="subjectsSelect" >
            <Form.Label>Subjects</Form.Label>
            <Form.Control as="select" onChange ={(event)=>{this.ChangeSub(event.target.value)}} value={this.state.subject_id} >
-             <option value="1101">OL-Sinhala</option>
-             <option value ="1102">OL-Buddhist</option>
-             <option value ="1103">OL-Science</option>
-             <option value = "1104">OL-History</option>
-             <option value = "1301">AL-Physics</option>
-             <option value = "1302">AL-Chemistry</option>
-             <option value = "1303">AL-Biology</option>
-             <option value = "1304">AL-Agri</option>
+           {this.getOptions()}
            </Form.Control>
          </Form.Group>
           </Col>
@@ -149,10 +159,10 @@ export default class QuestionAdding extends Component {
           <Form.Group controlId="paperSelected" >
            <Form.Label>Paper Type</Form.Label>
            <Form.Control as="select" onChange ={(event)=>{this.setState({paper_type:event.target.value})}} value={this.state.paper_type} >
-             <option value="Model-Paper">Model-Paper</option>
-             <option value ="Past-Paper">Past-Paper</option>
-             <option value ="School-Paper">School-Paper</option>
-             <option value = "Other">Other</option>
+             <option value="m-p">Model-Paper</option>
+             <option value ="p-p">Past-Paper</option>
+             <option value ="s-p">School-Paper</option>
+             <option value = "o">Other</option>
            </Form.Control>
          </Form.Group>
           </Col>
@@ -181,12 +191,12 @@ export default class QuestionAdding extends Component {
     </Row>
     <Form.Group controlId="question">
       <Form.Label>Question</Form.Label>
-      <Form.Control as="textarea" rows="3" value={this.state.question} onChange= {(event) => this.setState({question:this.convert(event.target.value,this.state.font)})}/>
+      <Form.Control as="textarea" rows="3" value={this.state.question} onChange= {(event) => this.addQuestion(event.target.value)}/>
     </Form.Group>
     <Row><Col>
     <Form.Group controlId="correct_answer">
       <Form.Label>Correct Answer</Form.Label>
-      <Form.Control type="Text" placeholder="Correct Answer" value={this.state.correct_answer} onChange= {(event) => this.setState({correct_answer:this.convert(event.target.value,this.state.font)})}/>
+      <Form.Control type="Text" placeholder="Correct Answer" value={this.state.correct_answer} onChange= {(event) => this.setState({correct_answer:event.target.value})}/>
     </Form.Group>
     </Col>
     <Col>
@@ -208,12 +218,21 @@ export default class QuestionAdding extends Component {
       <Form.Control type="Text" placeholder="Incorrect Answer" value={this.state.incorrect_answers[2]} onChange= {(event) => {this.changeIncorrectAnswers(event,2)}} />
     </Form.Group>
     </Col></Row>
+    <Row>
+    <Col>
+      <Form.Group controlId="incorrect_ans[3]">
+        <Form.Label>Incorrect Answer 4</Form.Label>
+        <Form.Control type="Text" placeholder="Incorrect Answer" value={this.state.incorrect_answers[3]} onChange= {(event) => {this.changeIncorrectAnswers(event,3)}} />
+      </Form.Group>
+    </Col>
     {Number(this.state.subject_id)>1200?
-    (<Form.Group controlId="incorrect_ans[3]">
+    (<Col><Form.Group controlId="incorrect_ans[4]">
       <Form.Label>Incorrect Answer 4</Form.Label>
-      <Form.Control type="Text" placeholder="Incorrect Answer" value={this.state.incorrect_answers[3]} onChange= {(event) => {this.changeIncorrectAnswers(event,3)}} />
-    </Form.Group>):null
+      <Form.Control type="Text" placeholder="Incorrect Answer" value={this.state.incorrect_answers[4]} onChange= {(event) => {this.changeIncorrectAnswers(event,4)}} />
+    </Form.Group></Col>):null
+
   }
+  </Row>
     <Button variant="primary" onClick={this.handleSubmit}>
       Submit
     </Button>
