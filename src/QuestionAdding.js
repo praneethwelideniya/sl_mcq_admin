@@ -7,7 +7,7 @@ export default class QuestionAdding extends Component {
   state ={
     question : "",
     incorrect_answers:["","","",""],
-    correct_answer:"",
+    correct_answer:null,
     subject_id:"",
     paper_type:"Model-Paper",
     q_num:"",

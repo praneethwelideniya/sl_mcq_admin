@@ -24,8 +24,7 @@ if(question.incorrect_answers.length > 3 && question.correct_answer!==""){
    question.random_2= await crypto.randomBytes(2).readUInt32BE(0, true);
    question.random_3= await crypto.randomBytes(2).readUInt32BE(0, true);
    let a = await question.correct_answer
-   question.correct_answer = await question.incorrect_answers[a-1];
-   await question.incorrect_answers.splice(a-1,1)
+   question.correct_answer = a-1;
    console.log(question)
    return userApiClient.post('/addQuestion',question)
   .then(function (response) {
