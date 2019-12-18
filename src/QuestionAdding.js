@@ -15,7 +15,8 @@ export default class QuestionAdding extends Component {
     other: "",
     active:true,
     subjects:[],
-    images_exists:false
+    images_exists:false,
+    images:null
   }
   constructor(props) {
       super(props);
@@ -32,6 +33,12 @@ export default class QuestionAdding extends Component {
     }).catch(error=>{
 
     })
+  }
+
+  componentDidUpdate(){
+    if(!this.state.images_exists && this.state.images!==null){
+      this.setState({images:null})
+    }
   }
 
   changeIncorrectAnswers(event,index){
@@ -53,7 +60,8 @@ export default class QuestionAdding extends Component {
        medium:this.state.medium,
        other: this.state.other,
        active:this.state.active,
-       images_exists:this.state.images_exists
+       images_exists:this.state.images_exists,
+       images:this.state.images
      }
    }
 
@@ -233,9 +241,26 @@ addQuestion(value){
 
   }
   </Row>
+  <Row>
+    <Col>
+    <Form.Group controlId="formBasicCheckbox">
+    <Form.Check type="checkbox" label="Images" checked={this.state.images_exists} onChange = {()=>this.setState({images_exists:!this.state.images_exists})}/>
+  </Form.Group>
+  </Col>
+  <Col>
+  { this.state.images_exists?
+  (<Form.Group controlId="images">
+    <Form.Label>Images</Form.Label>
+    <Form.Control type="File" multiple onChange = {(event) =>{ this.setState({images:event.target.files.length>0?event.target.files:null})}}/>
+  </Form.Group>):null
+  }
+  </Col>
+  </Row>
+  <Row>
     <Button variant="primary" onClick={this.handleSubmit}>
       Submit
     </Button>
+  </Row>
     </Container>
   </Form>
       </div>
