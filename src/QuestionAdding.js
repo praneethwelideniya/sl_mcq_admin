@@ -9,7 +9,7 @@ export default class QuestionAdding extends Component {
     incorrect_answers:["","","",""],
     correct_answer:null,
     subject_id:"",
-    paper_type:"Model-Paper",
+    paper_type:"m-p",
     q_num:"",
     medium:"sinhala",
     other: "",
@@ -248,7 +248,7 @@ addQuestion(value){
   </Form.Group>
   </Col>
   <Col>
-  { this.state.images_exists?
+  { false?
   (<Form.Group controlId="images">
     <Form.Label>Images</Form.Label>
     <Form.Control type="File" multiple onChange = {(event) =>{ this.setState({images:event.target.files.length>0?event.target.files:null})}}/>
