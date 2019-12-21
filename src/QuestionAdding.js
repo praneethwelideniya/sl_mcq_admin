@@ -16,7 +16,7 @@ export default class QuestionAdding extends Component {
     active:true,
     subjects:[],
     images_exists:false,
-    images:null
+    img_url:null
   }
   constructor(props) {
       super(props);
@@ -36,8 +36,8 @@ export default class QuestionAdding extends Component {
   }
 
   componentDidUpdate(){
-    if(!this.state.images_exists && this.state.images!==null){
-      this.setState({images:null})
+    if(!this.state.images_exists && this.state.img_url!==null){
+      this.setState({img_url:null})
     }
   }
 
@@ -61,7 +61,7 @@ export default class QuestionAdding extends Component {
        other: this.state.other,
        active:this.state.active,
        images_exists:this.state.images_exists,
-       images:this.state.images
+       img_url:this.state.img_url
      }
    }
 
@@ -132,7 +132,11 @@ getOptions(){
 
 addQuestion(value){
   let str = value.replace("  "," ")
-  str = str.replace(new RegExp(/\((.*?)\)/g),"///")
+  str = str.replace("(1)","///")
+  str = str.replace("(2)","///")
+  str = str.replace("(3)","///")
+  str = str.replace("(4)","///")
+  str = str.replace("(5)","///")
   let arr = str.split("///")
   this.setState({question:arr[0]})
   arr.splice(0,1)
@@ -238,20 +242,23 @@ addQuestion(value){
       <Form.Label>Incorrect Answer 4</Form.Label>
       <Form.Control type="Text" placeholder="Incorrect Answer" value={this.state.incorrect_answers[4]} onChange= {(event) => {this.changeIncorrectAnswers(event,4)}} />
     </Form.Group></Col>):null
-
-  }
+    }
   </Row>
   <Row>
     <Col>
     <Form.Group controlId="formBasicCheckbox">
-    <Form.Check type="checkbox" label="Images" checked={this.state.images_exists} onChange = {()=>this.setState({images_exists:!this.state.images_exists})}/>
+    <Form.Check type="checkbox" label="Images" checked={this.state.images_exists}
+      onChange = {()=>{
+        this.setState({images_exists:!this.state.images_exists})
+        this.setState({img_url:this.state.other+this.state.paper_type+this.state.subject_id+this.state.q_num})
+    }}/>
   </Form.Group>
   </Col>
   <Col>
-  { false?
-  (<Form.Group controlId="images">
-    <Form.Label>Images</Form.Label>
-    <Form.Control type="File" multiple onChange = {(event) =>{ this.setState({images:event.target.files.length>0?event.target.files:null})}}/>
+  { this.state.images_exists?
+  (<Form.Group controlId="img_url">
+    <Form.Label>IMAGE URL</Form.Label>
+    <Form.Control type="Text"  onChange = {(event) =>{ this.setState({img_url:event.target.value})}} value= {this.state.img_url}/>
   </Form.Group>):null
   }
   </Col>
