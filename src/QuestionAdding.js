@@ -39,6 +39,7 @@ export default class QuestionAdding extends Component {
     if(!this.state.images_exists && this.state.img_url!==null){
       this.setState({img_url:null})
     }
+    console.log(this.state.incorrect_answers)
   }
 
   changeIncorrectAnswers(event,index){
@@ -131,6 +132,7 @@ getOptions(){
 }
 
 addQuestion(value){
+
   let str = value.replace("  "," ")
   str = str.replace("(1)","///")
   str = str.replace("(2)","///")
@@ -139,8 +141,10 @@ addQuestion(value){
   str = str.replace("(5)","///")
   let arr = str.split("///")
   this.setState({question:arr[0]})
-  arr.splice(0,1)
-  this.setState({incorrect_answers:arr})
+  if(arr.length>1){
+    arr.splice(0,1)
+    this.setState({incorrect_answers:arr})
+  }
 }
   render() {
     return (
